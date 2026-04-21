@@ -10,12 +10,7 @@ function Square({value, onSquareClick}) {
 
 
 
-export default function Board() {
-  const [xIsNext, setXIsNext] = useState(true);
-  const [squares, setSquares] = useState(Array(9).fill(null));
-
-  let content = xIsNext? "Next Player: X": "Next Player: O";
-
+function Board({ xIsNext, squares, onPlay }) {
 
   function handleClick(i) {
 
@@ -25,16 +20,15 @@ export default function Board() {
 
     const nextSquares = squares.slice();
     if (xIsNext) {
-      nextSquares[i] = 'X';
+      nextSquares[i] = "X";
     } else {
-      nextSquares[i] = 'O';
+      nextSquares[i] = "O";
     }
-  
-    setSquares(nextSquares);
-    setXIsNext(!xIsNext);
+    onPlay(nextSquares);
   }
 
-    let winner = checkForWinner(squares);
+    const winner = checkForWinner(squares);
+    let content =  'Next move is ' + (xIsNext ? 'X': 'O');
     if (winner)
     {
       content = `Winner is ${winner}`;
@@ -61,6 +55,59 @@ export default function Board() {
       </div>
     </>
   );
+}
+
+export default function Game() {
+
+  const [history, sethistory] = useState([Array(9).fill(null)]);
+  const [currentMove, setCurrentMove] = useState(0);
+  const xIsNext = currentMove % 2 === 0;
+  const currentSquares = history[currentMove];
+
+  function handlePlay(nextSquares) {
+    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+    sethistory(nextHistory);  
+    setCurrentMove(nextHistory.length - 1);
+  }
+
+  function jumpTo(nextMove)
+  {
+    setCurrentMove(nextMove);
+  }
+
+  const moves = history.map((squares, move) => {
+    let description;
+    if (move > 0)
+    {
+      description = 'Go to move #' + move;
+    }
+    else
+    {
+      description = 'Go to game start';
+    }
+
+    return (
+      <li key={move}>
+        <button onClick={() => jumpTo(move)}>{description}</button>
+      </li>
+    );
+  });
+  return (
+    <div className='game'>
+      <div className='game-board'>
+        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay}/>
+
+      </div>
+      <div>
+        <div className="game-info">
+          <ol>
+            {moves}
+          </ol>
+        </div>
+      </div>
+    </div>
+  )
+
 }
 
 function checkForWinner(squares)
